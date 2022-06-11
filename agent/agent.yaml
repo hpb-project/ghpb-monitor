@@ -1,0 +1,4 @@
+hpbnode:
+    agent_port : 9101
+    rpc_url : http://127.0.0.1:8545   
+    ghpb_path : /tmp/ghpb

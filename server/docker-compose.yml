@@ -1,0 +1,62 @@
+version: '3'
+services:
+
+  hpbmon_server_prometheus:
+    user: root
+    image: prom/prometheus:v2.10.0
+    container_name: hpbmon_server_prometheus
+    hostname: prometheus_server
+    privileged: true
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/alert.rules:/etc/prometheus/alert.rules
+      - ./data:/etc/prometheus/data
+      - /etc/localtime:/etc/localtime
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - hpbmon_server_alertmanager
+    ports:
+      - '${PROMETHEUS_HOSTPORT}:${PROMETHEUS_CONTAINERPORT}'
+
+  hpbmon_server_alertmanager:
+    image: prom/alertmanager:v0.17.0
+    container_name: hpbmon_server_alertmanager
+    hostname: prometheus_alertmanager_server
+    volumes:
+      - ./config/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - ./config/alert.tmpl:/etc/alertmanager/template/alert.tmpl
+      - /etc/localtime:/etc/localtime
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+    ports:
+      - '${ALERTMANAGER_HOSTPORT}:${ALERTMANAGER_CONTAINERPORT}'
+
+  hpbmon_server_grafana:
+    user: root
+    build:
+      context: ./grafana
+      dockerfile: Dockerfile
+      args:
+        VERSION: ${VERSION}
+        LANGUAGE: ${LANGUAGE}
+    image: hpbmon_server/grafana:5.4.3
+    container_name: hpbmon_server_grafana
+    hostname: grafana_server
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_PATHS_CONFIG=/etc/grafana/grafana.ini
+    volumes:
+      - ./config/grafana:/etc/grafana
+      - ./grafana/grafanadb:/var/lib/grafana/grafanadb
+      - /etc/localtime:/etc/localtime
+    depends_on:
+      - hpbmon_server_prometheus
+    ports:
+      - '${GRAFANA_HOSTPORT}:${GRAFANA_CONTAINERPORT}'
+
+volumes:
+  grafana_data: {}
+  prometheus_data: {}
+

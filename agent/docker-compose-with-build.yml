@@ -1,0 +1,16 @@
+version: "3"
+services:
+
+  hpbmon_agent_host_exporter:
+    image: prom/node-exporter:v0.18.0
+    hostname: host_exporter
+    container_name: hpbmon_agent_host_exporter
+    volumes:
+      - /proc:/host/proc
+      - /sys:/host/sys
+      - /:/host/rootfs
+      - /etc/localtime:/etc/localtime
+    command: "--path.procfs='/host/proc' --path.sysfs='/host/sys' --path.rootfs='/host/rootfs'"
+    networks:
+      - hpbmon-agent-net
+
